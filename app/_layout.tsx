@@ -1,29 +1,49 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import { SplashScreen, Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import useAuthStore from "./store/useAuthStore";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
+SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isLoggedIn, fetchUserProfile, user, isLoading } = useAuthStore();
+  const [authChecked, setAuthChecked] = useState(false);
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    MonoReg: require("../assets/fonts/Poppins-Regular.ttf"),
+    MontMed: require("../assets/fonts/Poppins-Medium.ttf"),
+    MontBold: require("../assets/fonts/Poppins-SemiBold.ttf"),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  useEffect(() => {
+    const checkAuth = async () => {
+      await fetchUserProfile();
+      setAuthChecked(true);
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    // Hide splash screen when both fonts are loaded AND auth is checked
+    if (loaded && authChecked) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, authChecked]);
+
+  // Keep splash screen visible while loading fonts or checking auth
+  if (!loaded || !authChecked) {
     return null;
   }
-
+  console.log(isLoggedIn);
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="protectedRoute" />
+      </Stack.Protected>
+      {/* Expo Router includes all routes by default. Adding Stack.Protected creates exceptions for these screens. */}
+    </Stack>
   );
 }
