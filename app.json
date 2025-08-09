@@ -4,7 +4,7 @@
     "slug": "buddy_chart",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/chats.png",
     "scheme": "buddychart",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

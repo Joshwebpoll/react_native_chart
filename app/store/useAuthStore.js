@@ -25,14 +25,13 @@ const useAuthStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await axios.post(`${baseUrl}/login`, { email, password });
-      console.log(res);
+
       const { token, name, success } = res.data;
 
       await AsyncStorage.setItem("token", token);
       set({ name, token, loading: false, isLoggedIn: true });
       return true;
     } catch (err) {
-      console.log(err);
       set({
         error: err.response?.data?.message || err.message,
         loading: false,
@@ -69,6 +68,7 @@ const useAuthStore = create((set) => ({
   logout: () => {
     AsyncStorage.removeItem("token");
     set({ isLoading: false, user: null, isLoggedIn: false });
+    return true;
   },
 
   fetchUserProfile: async () => {

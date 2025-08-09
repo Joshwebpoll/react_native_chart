@@ -11,14 +11,18 @@ import { capitalizeFirstLetter } from "../../components/upperCase";
 import useAuthStore from "../store/useAuthStore";
 
 export default function ProtectedLayOut() {
-  const { isLoggedIn, fetchUserProfile, user, isLoading } = useAuthStore();
+  const { isLoggedIn, fetchUserProfile, user, isLoading, logout } =
+    useAuthStore();
+
   const router = useRouter();
   useEffect(() => {
     fetchUserProfile();
   }, []);
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    router.replace("/login");
+    const result = await logout();
+    if (result) {
+      router.replace("/login");
+    }
   };
 
   return (

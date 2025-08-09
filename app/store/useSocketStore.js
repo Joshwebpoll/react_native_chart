@@ -1,0 +1,88 @@
+// store/socketStore.js
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { io } from "socket.io-client";
+import { create } from "zustand";
+
+const useSocketStore = create((set, get) => ({
+  socket: null,
+  isConnected: false,
+  error: null,
+
+  initSocket: async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      console.log(token);
+      if (!token) {
+        console.warn("No token found");
+        return;
+      }
+
+      const socket = io("https://buddy-chat-backend-ii8g.onrender.com", {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
+
+      socket.on("connect", () => {
+        console.log("Socket connected");
+        set({ isConnected: true, error: null });
+      });
+
+      socket.on("disconnect", (reason) => {
+        console.log("Socket disconnected:", reason);
+        set({ isConnected: false });
+      });
+
+      socket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err.message);
+        set({ error: err.message, isConnected: false });
+      });
+
+      set({ socket });
+    } catch (err) {
+      console.error("Socket init error:", err.message);
+      set({ error: err.message });
+    }
+  },
+
+  emit: (event, data) => {
+    const { socket, isConnected } = get();
+    if (socket && isConnected) {
+      socket.emit(event, data);
+    } else {
+      console.warn("Cannot emit, socket not connected");
+    }
+  },
+
+  on: (event, callback) => {
+    const { socket } = get();
+    if (socket) {
+      socket.on(event, callback);
+    }
+  },
+
+  off: (event, callback) => {
+    const { socket } = get();
+    if (socket) {
+      socket.off(event, callback);
+    }
+  },
+
+  disconnect: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.disconnect();
+      set({ socket: null, isConnected: false });
+    }
+  },
+
+  reconnect: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.connect();
+    }
+  },
+}));
+export default useSocketStore;

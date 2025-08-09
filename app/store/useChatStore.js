@@ -11,6 +11,8 @@ const useChatStore = create((set, get) => ({
   hasMore: true,
   skip: 0,
   limit: 10,
+  activeChatId: null,
+  setActiveChatId: (id) => set({ activeChatId: id }),
 
   fetchUsers: async () => {
     set({ loading: true, error: null });
@@ -61,46 +63,6 @@ const useChatStore = create((set, get) => ({
     }
   },
 
-  // updateChatPreview: (msg, user) => {
-  //   const isSender = msg.sender === user?._id;
-  //   const otherUserId = isSender ? msg.receiver : msg.sender;
-
-  //   set((state) => {
-  //     const existing = state.previews.find(
-  //       (data) => data.userId === otherUserId
-  //     );
-
-  //     if (existing) {
-  //       const updatePreview = state.previews.map((datas) => {
-  //         if (datas?.userId === otherUserId) {
-  //           return {
-  //             ...datas,
-  //             latestMessage: msg.message,
-  //             createdAt: Date.now(),
-  //             unreadCount: isSender ? 0 : datas.unreadCount + 1,
-  //           };
-  //         }
-  //         return datas;
-  //       });
-
-  //       return { previews: updatePreview };
-  //     } else {
-  //       // Add new preview
-  //       return {
-  //         previews: [
-  //           ...state.previews,
-  //           {
-  //             userId: otherUserId,
-  //             latestMessage: msg.message,
-  //             createdAt: Date.now(),
-  //             unreadCount: isSender ? 0 : 1,
-  //           },
-  //         ],
-  //       };
-  //     }
-  //   });
-  // },
-
   updateChatPreview: (msg, user) => {
     const isSender = msg.sender === user?._id;
     const otherUserId = isSender ? msg.receiver : msg.sender;
@@ -148,6 +110,10 @@ const useChatStore = create((set, get) => ({
         return { previews: [updatedPreview, ...previews] };
       }
     });
+  },
+
+  markRead: (user, emit) => {
+    emit("mark-read", { from: user?.id });
   },
 
   markCount: async (userid) => {

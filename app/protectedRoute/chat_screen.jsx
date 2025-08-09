@@ -4,13 +4,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Send } from "lucide-react-native";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -25,60 +19,10 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-// import { useSocket } from "../../utils/socket";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import useAuthStore from "../store/useAuthStore";
 import useChatStore from "../store/useChatStore";
-
-// Custom Socket Hook
-const useSocket = () => {
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    const init = async () => {
-      const token = await AsyncStorage.getItem("token");
-      console.log(token, "tgsisjs");
-      if (token) {
-        // Dynamic import to avoid SSR issues
-        import("socket.io-client").then(({ io }) => {
-          const newSocket = io("https://buddy-chat-backend-ii8g.onrender.com", {
-            auth: { token },
-          });
-
-          newSocket.on("connect", () => setIsConnected(true));
-          newSocket.on("disconnect", () => setIsConnected(false));
-
-          setSocket(newSocket);
-
-          return () => {
-            newSocket.disconnect();
-          };
-        });
-      }
-    };
-    init();
-  }, []);
-
-  const emit = useCallback(
-    (event, data) => {
-      socket?.emit(event, data);
-    },
-    [socket]
-  );
-
-  const on = useCallback(
-    (event, callback) => {
-      if (!socket) return () => {};
-
-      socket.on(event, callback);
-      return () => socket.off(event, callback);
-    },
-    [socket]
-  );
-
-  return { isConnected, emit, on, socket };
-};
+import useSocketStore from "../store/useSocketStore";
 
 const ChatScreen = () => {
   const fetchMessages = useChatStore((state) => state.fetchMessages);
@@ -89,15 +33,17 @@ const ChatScreen = () => {
   const loading = useChatStore((state) => state.loading);
   const fetchUserProfile = useAuthStore((state) => state.fetchUserProfile);
   const resetMessages = useChatStore((state) => state.resetMessages);
+  const markRead = useChatStore((state) => state.markRead);
   const userProfile = useAuthStore((state) => state.user);
   const user = useLocalSearchParams();
-  const { emit, on, isConnected } = useSocket();
+  // const { emit } = useSocket();
   const navigation = useNavigation();
   const flatListRef = useRef(null);
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
   const [inputText, setInputText] = useState("");
-
+  const setActiveChatId = useChatStore((state) => state.setActiveChatId);
+  const { emit, on, off, isConnected } = useSocketStore();
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => (
@@ -137,27 +83,21 @@ const ChatScreen = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    emit("mark-read", { from: user?.id });
+    // Tell global state which chat is open
+    setActiveChatId(user?.id);
 
-    markCount(user?.id);
-  }, [emit, user?.id]);
-
-  const handleStillInChat = useCallback(() => {
+    // Mark any unread messages for this chat as read immediately
     emit("mark-read", { from: user?.id });
     markCount(user?.id);
-  }, [markCount, emit]);
+    return () => {
+      setActiveChatId(null); // When leaving, clear it
+    };
+  }, [user?.id]);
 
   useEffect(() => {
-    const handleMessage = (data) => {
-      console.log(data);
-      addMessage(data);
-      handleStillInChat();
-      updateChatPreview(data, userProfile);
-    };
-
-    const cleanup = on("chatMessage", handleMessage);
-    return cleanup;
-  }, [on, userProfile]);
+    emit("mark-read", { from: user?.id });
+    markCount(user?.id);
+  }, [user?.id]);
 
   const sendMessage = () => {
     if (inputText.trim()) {
@@ -243,9 +183,9 @@ const ChatScreen = () => {
         // keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         keyboardVerticalOffset={80}
       >
-        <View>
+        {/* <View>
           <Text>{isConnected ? "connected" : "disconne"}</Text>
-        </View>
+        </View> */}
         {loading ? (
           <View
             style={{ flex: 1, justifyContent: "center", alignItems: "center" }}

@@ -1,6 +1,7 @@
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect, useState } from "react";
+import { ToastProvider } from "../components/toast";
 import useAuthStore from "./store/useAuthStore";
 
 SplashScreen.preventAutoHideAsync();
@@ -32,18 +33,20 @@ export default function RootLayout() {
   if (!loaded || !authChecked) {
     return null;
   }
-  console.log(isLoggedIn);
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-      </Stack.Protected>
 
-      <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="protectedRoute" />
-      </Stack.Protected>
-      {/* Expo Router includes all routes by default. Adding Stack.Protected creates exceptions for these screens. */}
-    </Stack>
+  return (
+    <ToastProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!isLoggedIn}>
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={isLoggedIn}>
+          <Stack.Screen name="protectedRoute" />
+        </Stack.Protected>
+        {/* Expo Router includes all routes by default. Adding Stack.Protected creates exceptions for these screens. */}
+      </Stack>
+    </ToastProvider>
   );
 }

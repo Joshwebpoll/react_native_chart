@@ -1,20 +1,18 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router/build/hooks";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Animatable from "react-native-animatable";
+import useAuthStore from "../store/useAuthStore";
 export default function ProfileScreen() {
-  const user = {
-    name: "Frank Josh",
-    email: "frankjosh@example.com",
-    imageUrl: "https://i.pravatar.cc/150?img=3", // You can replace with actual avatar
-  };
+  const logout = useAuthStore((state) => state.logout);
   const { name, email, imageUrl } = useLocalSearchParams();
   const router = useRouter();
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    router.replace("/login");
+    const result = await logout();
+    if (result) {
+      router.replace("/login");
+    }
   };
   return (
     <View style={styles.container}>

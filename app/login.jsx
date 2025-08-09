@@ -2,7 +2,6 @@ import { useNavigation, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
@@ -13,8 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ToastManager } from "../components/toast";
 import useAuthStore from "./store/useAuthStore";
-
 const { width, height } = Dimensions.get("window");
 
 const LoginScreen = () => {
@@ -28,26 +27,21 @@ const LoginScreen = () => {
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
-  //   useEffect(() => {
-  //     if (error) {
-  //       Alert.alert("Login Error");
-  //     }
-  //   }, [error]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      ToastManager.error("Error", "Please fill in all fields");
       return;
     }
 
     const result = await login(email.toLowerCase().trim(), password);
-    console.log(result);
+
     if (result) {
-      Alert.alert("Success", "Login successful!");
+      ToastManager.success("Login successful");
       router.replace("/login");
       // Navigation would happen here in a real app
     } else {
-      Alert.alert("Failed", error);
+      ToastManager.error("Failed", error);
     }
   };
 

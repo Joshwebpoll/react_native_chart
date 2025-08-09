@@ -5,7 +5,6 @@ import { ImageIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
@@ -16,8 +15,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ToastManager } from "../components/toast";
 import useAuthStore from "./store/useAuthStore";
-
 const { width, height } = Dimensions.get("window");
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -41,34 +40,33 @@ const RegisterScreen = () => {
 
   const validateForm = () => {
     if (!userDetail.name.trim()) {
-      Alert.alert("Error", "Please enter your name");
+      ToastManager.error("Error", "Please enter your name");
+
       return false;
     }
 
     if (!userDetail.email.trim()) {
-      Alert.alert("Error", "Please enter your email");
+      ToastManager.error("Error", "Please enter your email");
       return false;
     }
 
     if (!validateEmail(userDetail.email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      ToastManager.error("Error", "Please enter a valid email address");
       return false;
     }
 
     if (!userDetail.password) {
-      Alert.alert("Error", "Please enter a password");
+      ToastManager.error("Error", "Please enter a password");
       return false;
     }
 
     if (userDetail.password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+      ToastManager.error(
+        "Error",
+        "Password must be at least 6 characters long"
+      );
       return false;
     }
-
-    // if (formData.password !== formData.confirmPassword) {
-    //   Alert.alert("Error", "Passwords do not match");
-    //   return false;
-    // }
 
     return true;
   };
@@ -91,7 +89,7 @@ const RegisterScreen = () => {
       aspect: [1, 1],
       quality: 1,
     });
-    console.log(result);
+
     if (!result.canceled) {
       setProfileImage(result.assets[0].uri);
     }
@@ -121,7 +119,7 @@ const RegisterScreen = () => {
     const result = await signup(data);
 
     if (result) {
-      Alert.alert("Success", "Account created successfully!");
+      ToastManager.success("Success", "Account created successfully!");
       router.push("/(auth)/login");
     } else {
       console.log(result);

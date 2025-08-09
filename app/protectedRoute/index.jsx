@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useNavigation, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,63 +13,14 @@ import {
 
 import { formatChatTime } from "../../components/timeFormat";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAuthStore from "../store/useAuthStore";
 import useChatStore from "../store/useChatStore";
+import useSocketStore from "../store/useSocketStore";
 import ChatPreview from "./../../components/chatPreview";
-const useSocket = () => {
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    const init = async () => {
-      const token = await AsyncStorage.getItem("token");
-      console.log(token, "tgsisjs");
-      if (token) {
-        // Dynamic import to avoid SSR issues
-        import("socket.io-client").then(({ io }) => {
-          const newSocket = io("https://buddy-chat-backend-ii8g.onrender.com", {
-            auth: { token },
-          });
-
-          newSocket.on("connect", () => setIsConnected(true));
-          newSocket.on("disconnect", () => setIsConnected(false));
-
-          setSocket(newSocket);
-
-          return () => {
-            newSocket.disconnect();
-          };
-        });
-      }
-    };
-    init();
-  }, []);
-
-  const emit = useCallback(
-    (event, data) => {
-      socket?.emit(event, data);
-    },
-    [socket]
-  );
-
-  const on = useCallback(
-    (event, callback) => {
-      if (!socket) return () => {};
-
-      socket.on(event, callback);
-      return () => socket.off(event, callback);
-    },
-    [socket]
-  );
-
-  return { isConnected, emit, on, socket };
-};
 
 export default function Index() {
   const navigation = useNavigation();
   const router = useRouter();
-  const { emit, on, isConnected } = useSocket();
 
   const {
     fetchUsers,
@@ -78,9 +29,18 @@ export default function Index() {
     users,
     updateChatPreview,
     loading,
+    addMessage,
+    markCount,
   } = useChatStore();
+  const initSocket = useSocketStore((state) => state.initSocket);
   const { fetchUserProfile, user } = useAuthStore();
+  const { emit, on, off, isConnected } = useSocketStore();
+  const { activeChatId } = useChatStore.getState();
 
+  console.log(activeChatId);
+  useEffect(() => {
+    initSocket(); // only once when app starts
+  }, []);
   useEffect(() => {
     fetchUsers();
     fetchUserProfile();
@@ -88,19 +48,32 @@ export default function Index() {
   }, [messagePreview, fetchUsers, fetchUserProfile]);
 
   useEffect(() => {
+    if (!isConnected) return;
     const handleMessage = (data) => {
-      console.log(data);
       updateChatPreview(data, user);
-    };
-    const cleanup = on("chatMessage", handleMessage);
-    // return cleanup; // ✅ Proper cleanup
-  }, [on]);
+      addMessage(data);
 
+      if (data.senderUser._id === activeChatId) {
+        emit("mark-read", { from: activeChatId });
+        markCount(activeChatId);
+      }
+    };
+
+    on("chatMessage", handleMessage);
+
+    return () => {
+      off("chatMessage", handleMessage);
+    };
+  }, [on, off, isConnected, activeChatId]);
   const filteredPeople = users.filter(
     (person) =>
       !previews.some((preview) => preview.userId === person._id) &&
       person._id !== user?._id
   );
+
+  // const showErrorExample = () => {
+  //   ToastManager.success("Operation completed!");
+  // };
 
   if (loading) {
     return (
@@ -109,12 +82,9 @@ export default function Index() {
       </View>
     );
   }
-  console.log(previews, "frim er");
+
   return (
     <SafeAreaView style={styles.container}>
-      <View>
-        <Text>{isConnected ? "connceted" : "disconn"}</Text>
-      </View>
       <FlatList
         data={previews}
         keyExtractor={(item) => item.userId}
