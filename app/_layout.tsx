@@ -16,7 +16,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      await fetchUserProfile();
+      const result = await fetchUserProfile();
+
       setAuthChecked(true);
     };
     checkAuth();
@@ -33,12 +34,12 @@ export default function RootLayout() {
   if (!loaded || !authChecked) {
     return null;
   }
-
+  console.log(isLoggedIn, authChecked, "hello no");
   return (
     <ToastProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, animation: "none" }}>
         <Stack.Protected guard={!isLoggedIn}>
-          <Stack.Screen name="login" />
+          <Stack.Screen name="index" />
           <Stack.Screen name="register" />
         </Stack.Protected>
 

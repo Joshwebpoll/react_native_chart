@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "buddy_chart",
+    "name": "BuddyChart",
     "slug": "buddy_chart",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,10 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/chats.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.joshpoll.buddy_chart"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a81b1c75-85cf-4c04-808a-2eceb7192651"
+      }
     }
   }
 }

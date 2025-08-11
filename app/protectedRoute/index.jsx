@@ -13,6 +13,7 @@ import {
 
 import { formatChatTime } from "../../components/timeFormat";
 
+import { StatusBar } from "expo-status-bar";
 import useAuthStore from "../store/useAuthStore";
 import useChatStore from "../store/useChatStore";
 import useSocketStore from "../store/useSocketStore";
@@ -37,7 +38,6 @@ export default function Index() {
   const { emit, on, off, isConnected } = useSocketStore();
   const { activeChatId } = useChatStore.getState();
 
-  console.log(activeChatId);
   useEffect(() => {
     initSocket(); // only once when app starts
   }, []);
@@ -85,6 +85,7 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="#ffffff" />
       <FlatList
         data={previews}
         keyExtractor={(item) => item.userId}

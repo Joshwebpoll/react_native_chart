@@ -3,7 +3,6 @@ import {
   Animated,
   Dimensions,
   SafeAreaView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -261,7 +260,7 @@ const ToastProvider = ({ children }) => {
 const App = () => {
   return (
     <View style={styles.app}>
-      <StatusBar barStyle="light-content" backgroundColor="#333" />
+      {/* <StatusBar barStyle="light-content" backgroundColor="#333" /> */}
       <ToastExample />
       <ToastContainer />
     </View>

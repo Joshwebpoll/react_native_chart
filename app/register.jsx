@@ -120,7 +120,7 @@ const RegisterScreen = () => {
 
     if (result) {
       ToastManager.success("Success", "Account created successfully!");
-      router.push("/(auth)/login");
+      router.push("/");
     } else {
       console.log(result);
     }
@@ -301,9 +301,9 @@ const RegisterScreen = () => {
           <View style={styles.footer}>
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Already have an account? </Text>
-              {/* <TouchableOpacity onPress={() => setCurrentScreen("login")}>
+              <TouchableOpacity onPress={() => useRouter().push("/")}>
                 <Text style={styles.signupLink}>Sign In</Text>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
         </View>

@@ -36,7 +36,6 @@ const ChatScreen = () => {
   const markRead = useChatStore((state) => state.markRead);
   const userProfile = useAuthStore((state) => state.user);
   const user = useLocalSearchParams();
-  // const { emit } = useSocket();
   const navigation = useNavigation();
   const flatListRef = useRef(null);
   const headerHeight = useHeaderHeight();
@@ -44,6 +43,7 @@ const ChatScreen = () => {
   const [inputText, setInputText] = useState("");
   const setActiveChatId = useChatStore((state) => state.setActiveChatId);
   const { emit, on, off, isConnected } = useSocketStore();
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => (
@@ -54,14 +54,14 @@ const ChatScreen = () => {
               width: 36,
               height: 36,
               borderRadius: 18,
-              marginRight: 8,
+              marginRight: 10,
             }}
           />
           <Text
             style={{
               fontSize: 17,
               fontWeight: "600",
-              color: "#222",
+              color: "#1a1a1a",
               fontFamily: "MontMed",
             }}
           >
@@ -69,6 +69,9 @@ const ChatScreen = () => {
           </Text>
         </View>
       ),
+      headerStyle: {
+        backgroundColor: "#ffffff",
+      },
     });
   }, [navigation, user]);
 
@@ -83,14 +86,11 @@ const ChatScreen = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    // Tell global state which chat is open
     setActiveChatId(user?.id);
-
-    // Mark any unread messages for this chat as read immediately
     emit("mark-read", { from: user?.id });
     markCount(user?.id);
     return () => {
-      setActiveChatId(null); // When leaving, clear it
+      setActiveChatId(null);
     };
   }, [user?.id]);
 
@@ -124,7 +124,6 @@ const ChatScreen = () => {
 
   const renderMessage = ({ item }) => {
     const isMe = item.sender === userProfile?._id;
-
     const time = format(new Date(item.createdAt), "hh:mm a");
 
     return (
@@ -132,33 +131,34 @@ const ChatScreen = () => {
         style={{
           flexDirection: "row",
           justifyContent: isMe ? "flex-end" : "flex-start",
-          marginHorizontal: 10,
+          marginHorizontal: 16,
           marginVertical: 4,
         }}
       >
         <View
           style={{
-            backgroundColor: isMe ? "#DCF8C6" : "#FFFFFF",
-            padding: 10,
-            borderRadius: 12,
-            maxWidth: "75%",
-            borderTopLeftRadius: isMe ? 12 : 0,
-            borderTopRightRadius: isMe ? 0 : 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 1,
-            elevation: 1,
+            backgroundColor: isMe ? "#007AFF" : "#f0f0f0",
+            padding: 12,
+            borderRadius: 16,
+            maxWidth: "80%",
+            borderTopLeftRadius: isMe ? 16 : 4,
+            borderTopRightRadius: isMe ? 4 : 16,
           }}
         >
-          <Text style={{ fontSize: 16, color: "#111", fontFamily: "MontMed" }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: isMe ? "#ffffff" : "#1a1a1a",
+              fontFamily: "MontMed",
+            }}
+          >
             {item.message}
           </Text>
           <Text
             style={{
               fontSize: 11,
               fontFamily: "MontMed",
-              color: "#666",
+              color: isMe ? "rgba(255,255,255,0.7)" : "#666",
               alignSelf: "flex-end",
               marginTop: 4,
             }}
@@ -172,38 +172,52 @@ const ChatScreen = () => {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#E5DDD5" }}
+      style={{ flex: 1, backgroundColor: "#ffffff" }}
       edges={["bottom"]}
     >
-      <StatusBar style="dark" backgroundColor="#E5DDD5" />
+      <StatusBar style="dark" backgroundColor="#ffffff" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        // keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         keyboardVerticalOffset={80}
       >
-        {/* <View>
-          <Text>{isConnected ? "connected" : "disconne"}</Text>
-        </View> */}
         {loading ? (
           <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            <ActivityIndicator size="large" />
+            <ActivityIndicator size="large" color="#007AFF" />
           </View>
         ) : messages.length === 0 ? (
           <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 32,
+            }}
           >
-            <Text>No messages yet</Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: "#666",
+                fontFamily: "MontMed",
+                textAlign: "center",
+              }}
+            >
+              No messages yet. Start the conversation!
+            </Text>
           </View>
         ) : (
           <FlatList
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item, index) => index} //console.log(item, "hhssh")}
+            keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{ paddingVertical: 10 }}
             onContentSizeChange={() =>
               flatListRef.current?.scrollToEnd({ animated: true })
@@ -215,39 +229,26 @@ const ChatScreen = () => {
           />
         )}
 
-        {/* <LegendList
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => console.log(`${item._id}`)}
-          recycleItems={true}
-          initialScrollOffset={messages.length - 1}
-          alignItemsAtEnd
-          maintainScrollAtEnd
-          maintainScrollAtEndThreshold={0.5}
-          maintainVisibleContentPosition
-          estimatedItemSize={100}
-        /> */}
-
         {/* Input */}
         <View
           style={{
             flexDirection: "row",
-            alignItems: "center",
-            // backgroundColor: "#fff",
-            paddingHorizontal: 10,
-            paddingVertical: 8,
+            alignItems: "flex-end",
+            backgroundColor: "#ffffff",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             borderTopWidth: 1,
-            borderTopColor: "#ddd",
+            borderTopColor: "#e0e0e0",
           }}
         >
           <View
             style={{
               flex: 1,
-              backgroundColor: "#f0f0f0",
+              backgroundColor: "#f5f5f5",
               borderRadius: 20,
               paddingHorizontal: 16,
               paddingVertical: Platform.OS === "ios" ? 12 : 8,
-              marginRight: 8,
+              marginRight: 10,
               maxHeight: 100,
             }}
           >
@@ -255,12 +256,12 @@ const ChatScreen = () => {
               value={inputText}
               onChangeText={setInputText}
               placeholder="Message"
-              placeholderTextColor="#666"
+              placeholderTextColor="#999"
               multiline
               style={{
                 fontSize: 16,
                 fontFamily: "MontMed",
-                color: "#000",
+                color: "#1a1a1a",
               }}
             />
           </View>
@@ -272,12 +273,12 @@ const ChatScreen = () => {
               width: 44,
               height: 44,
               borderRadius: 22,
-              backgroundColor: inputText.trim() ? "#128C7E" : "#ccc",
+              backgroundColor: inputText.trim() ? "#007AFF" : "#ccc",
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Send size={20} color="#fff" />
+            <Send size={20} color="#ffffff" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

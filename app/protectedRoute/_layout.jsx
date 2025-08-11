@@ -21,7 +21,7 @@ export default function ProtectedLayOut() {
   const handleLogout = async () => {
     const result = await logout();
     if (result) {
-      router.replace("/login");
+      router.replace("/");
     }
   };
 

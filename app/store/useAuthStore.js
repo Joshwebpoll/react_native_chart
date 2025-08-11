@@ -3,7 +3,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { create } from "zustand";
-import api from "../../utils/axios";
 // import axios from "../utils/axios";
 
 const baseUrl = "https://buddy-chat-backend-ii8g.onrender.com/api/v1/auth";
@@ -73,13 +72,19 @@ const useAuthStore = create((set) => ({
 
   fetchUserProfile: async () => {
     set({ isLoading: true });
+    const token = await AsyncStorage.getItem("token");
     try {
-      const res = await api.get(`/auth/me`); // should return current user profile
+      // const res = await api.get(`/auth/me`); // should return current user profile
+      const res = await axios.get(`${baseUrl}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set({ user: res.data, isLoading: false, isLoggedIn: true });
+      return true;
     } catch (err) {
       await AsyncStorage.removeItem("token");
       set({ isLoading: false, user: null, isLoggedIn: false });
+      return false;
     }
   },
 

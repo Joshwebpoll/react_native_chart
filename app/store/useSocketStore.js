@@ -2,16 +2,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { io } from "socket.io-client";
 import { create } from "zustand";
-
+import { ToastManager } from "../../components/toast";
 const useSocketStore = create((set, get) => ({
   socket: null,
   isConnected: false,
   error: null,
-
+  //https://expo.dev/accounts/joshpoll/projects/buddy_chart/builds/24c58660-322c-4600-96a2-cd15c6877804
   initSocket: async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      console.log(token);
+
       if (!token) {
         console.warn("No token found");
         return;
@@ -26,23 +26,24 @@ const useSocketStore = create((set, get) => ({
       });
 
       socket.on("connect", () => {
-        console.log("Socket connected");
+        ToastManager.success("You are now online");
         set({ isConnected: true, error: null });
       });
 
       socket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
+        // console.log("Socket disconnected:", reason);
         set({ isConnected: false });
       });
 
       socket.on("connect_error", (err) => {
-        console.error("Socket connection error:", err.message);
+        // ToastManager.error("Socket connection error:", err.message);
+
         set({ error: err.message, isConnected: false });
       });
 
       set({ socket });
     } catch (err) {
-      console.error("Socket init error:", err.message);
+      //console.error("Socket init error:", err.message);
       set({ error: err.message });
     }
   },
